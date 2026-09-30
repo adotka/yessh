@@ -1,0 +1,4 @@
+node_modules/
+/host/yessh
+/host/bin/
+*.log
