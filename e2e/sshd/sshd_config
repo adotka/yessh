@@ -1,0 +1,10 @@
+# Fleet host under test: trusts only the yessh CA. The CA file is written by the harness
+# into the shared volume; sshd reads it on every authentication attempt.
+Port 22
+HostKey /etc/ssh/ssh_host_ed25519_key
+TrustedUserCAKeys /yessh/ca.pub
+AuthorizedKeysFile none
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PermitRootLogin prohibit-password
+LogLevel VERBOSE

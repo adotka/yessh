@@ -1,0 +1,20 @@
+# Local relay + fleet host for the end-to-end test. See e2e/README.md.
+services:
+  ntfy:
+    image: binwiederhier/ntfy
+    command: serve
+    environment:
+      NTFY_BASE_URL: http://localhost:18080
+      NTFY_VISITOR_REQUEST_LIMIT_EXEMPT_HOSTS: 0.0.0.0/0
+    ports:
+      - "127.0.0.1:18080:80"
+  sshd:
+    image: yessh-e2e-sshd
+    build:
+      context: sshd
+      args:
+        BASE: ${SSHD_BASE:-alpine:3.20}
+    volumes:
+      - ./work/ca:/yessh:ro
+    ports:
+      - "127.0.0.1:12222:22"

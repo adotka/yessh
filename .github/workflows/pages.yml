@@ -1,0 +1,29 @@
+# Deploys pwa/ to GitHub Pages. Enable Pages with "GitHub Actions" as the source first.
+name: pages
+on:
+  push:
+    branches: [main]
+    paths: ["pwa/**"]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assemble site (app only, no tests/tools)
+        run: |
+          mkdir _site
+          cp -r pwa/index.html pwa/styles.css pwa/sw.js pwa/manifest.webmanifest pwa/src pwa/vendor pwa/icons _site/
+      - uses: actions/upload-pages-artifact@v3
+      - id: deployment
+        uses: actions/deploy-pages@v4
