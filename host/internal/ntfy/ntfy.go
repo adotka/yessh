@@ -76,6 +76,8 @@ type Subscription struct {
 	Messages <-chan Message
 	// Opened is closed once the first stream connection is established.
 	Opened <-chan struct{}
+	// Done is closed when the subscription goroutine has exited (after ctx is cancelled).
+	Done <-chan struct{}
 }
 
 // Subscribe opens a JSON stream on topic. since is passed to ntfy on the first connection
@@ -84,8 +86,10 @@ type Subscription struct {
 func (c *Client) Subscribe(ctx context.Context, topic, since string) *Subscription {
 	msgs := make(chan Message, 16)
 	opened := make(chan struct{})
+	done := make(chan struct{})
 	var once sync.Once
 	go func() {
+		defer close(done)
 		defer close(msgs)
 		backoff := time.Second
 		for ctx.Err() == nil {
@@ -110,7 +114,7 @@ func (c *Client) Subscribe(ctx context.Context, topic, since string) *Subscripti
 			}
 		}
 	}()
-	return &Subscription{Messages: msgs, Opened: opened}
+	return &Subscription{Messages: msgs, Opened: opened, Done: done}
 }
 
 func (c *Client) stream(ctx context.Context, topic, since string, out chan<- Message, onOpen func()) (last string, err error) {

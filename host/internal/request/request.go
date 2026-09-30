@@ -99,6 +99,11 @@ func Run(ctx context.Context, cfg config.Config, nt *ntfy.Client, dir keys.Dir, 
 
 	// Subscribe before publishing; `since` also covers a response that races the stream opening.
 	sub := nt.Subscribe(ctx, k.RespTopic, strconv.FormatInt(start.Unix()-1, 10))
+	// Don't return while the subscription goroutine can still run (and log).
+	defer func() {
+		cancel()
+		<-sub.Done
+	}()
 	select {
 	case <-sub.Opened:
 	case <-time.After(10 * time.Second):
