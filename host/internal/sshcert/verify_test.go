@@ -154,9 +154,17 @@ func TestSourceAddressAllowed(t *testing.T) {
 	}
 }
 
-// testdata/js-cert.json is produced by pwa/tools/gen-cert-fixture.mjs (the PWA's cert builder).
-func TestVerifiesJSBuiltCert(t *testing.T) {
-	raw, err := os.ReadFile("testdata/js-cert.json")
+// Certificates built by the other implementations:
+//   - testdata/js-cert.json: pwa/tools/gen-cert-fixture.mjs (the PWA's cert builder)
+//   - testdata/kotlin-cert.json: android core tests with YESSH_UPDATE_FIXTURES=1
+func TestVerifiesForeignCerts(t *testing.T) {
+	for _, name := range []string{"js-cert.json", "kotlin-cert.json"} {
+		t.Run(name, func(t *testing.T) { verifyFixture(t, "testdata/"+name) })
+	}
+}
+
+func verifyFixture(t *testing.T, path string) {
+	raw, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -192,6 +200,6 @@ func TestVerifiesJSBuiltCert(t *testing.T) {
 		b[i] = 'A'
 	}
 	if _, err := Verify(string(b), exp); err == nil {
-		t.Fatal("tampered JS cert accepted")
+		t.Fatal("tampered cert accepted")
 	}
 }
