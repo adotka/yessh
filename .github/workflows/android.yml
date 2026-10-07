@@ -1,0 +1,101 @@
+name: android
+on:
+  push:
+    branches: ["**"]
+    paths:
+      - "android/**"
+      - "host/**"
+      - ".github/workflows/android.yml"
+  pull_request:
+    paths:
+      - "android/**"
+      - "host/**"
+      - ".github/workflows/android.yml"
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: android
+
+jobs:
+  core:
+    name: core (JVM) + host interop
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache-dependency-path: host/go.sum
+      - name: Build yessh and start ntfy
+        run: |
+          (cd ../host && go build -o "$RUNNER_TEMP/yessh" ./cmd/yessh)
+          docker run -d --name ntfy -p 18080:80 -e NTFY_VISITOR_REQUEST_LIMIT_EXEMPT_HOSTS=0.0.0.0/0 binwiederhier/ntfy serve
+          for _ in $(seq 30); do curl -fsS http://localhost:18080/v1/health >/dev/null 2>&1 && break; sleep 1; done
+      - name: Core tests (Go vectors, ssh-keygen -L, engine, interop with the real host)
+        env:
+          YESSH_E2E_NTFY: http://localhost:18080
+        run: YESSH_BIN="$RUNNER_TEMP/yessh" ./gradlew -Pyessh.coreOnly=true :core:test
+
+  app:
+    name: app (build + lint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Release signing key (if configured)
+        env:
+          KEYSTORE_B64: ${{ secrets.YESSH_SIGNING_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+            echo "YESSH_SIGNING_STORE_FILE=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
+          fi
+      - name: Build debug + release, lint
+        env:
+          YESSH_SIGNING_STORE_PASSWORD: ${{ secrets.YESSH_SIGNING_STORE_PASSWORD }}
+          YESSH_SIGNING_KEY_ALIAS: ${{ secrets.YESSH_SIGNING_KEY_ALIAS }}
+          YESSH_SIGNING_KEY_PASSWORD: ${{ secrets.YESSH_SIGNING_KEY_PASSWORD }}
+        run: ./gradlew :app:assembleDebug :app:assembleRelease :app:lintDebug :app:assembleDebugAndroidTest
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: yessh-android
+          path: |
+            android/app/build/outputs/apk/**/*.apk
+            android/app/build/reports/lint-results-debug.html
+          if-no-files-found: warn
+
+  emulator:
+    name: instrumented tests (emulator)
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          disable-animations: true
+          working-directory: android
+          script: ./gradlew :app:connectedDebugAndroidTest
