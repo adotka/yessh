@@ -116,14 +116,20 @@ class ListenerService : Service() {
         private const val TAG = "yessh"
         const val ACTION_RESTART = "io.github.adotka.yessh.RESTART"
 
-        fun start(context: Context) {
-            if (!context.appState.paired) return
-            ContextCompat.startForegroundService(context, Intent(context, ListenerService::class.java))
-        }
+        fun start(context: Context) = launch(context, Intent(context, ListenerService::class.java))
 
-        fun restart(context: Context) {
+        fun restart(context: Context) = launch(context, Intent(context, ListenerService::class.java).setAction(ACTION_RESTART))
+
+        private fun launch(context: Context, intent: Intent) {
             if (!context.appState.paired) return
-            ContextCompat.startForegroundService(context, Intent(context, ListenerService::class.java).setAction(ACTION_RESTART))
+            try {
+                ContextCompat.startForegroundService(context, intent)
+            } catch (e: IllegalStateException) {
+                // ForegroundServiceStartNotAllowedException (background start without an exemption).
+                // The next app open or boot starts it again.
+                Log.w(TAG, "listener not started: $e")
+                context.appState.listenerStatus.value = "not running (open the app)"
+            }
         }
 
         fun stop(context: Context) {
