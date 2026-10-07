@@ -12,6 +12,8 @@ yessh request -p root   →  notification on phone  →  tap  →  yessh  →  ~
 ssh root@fleet-host     ✓ (until the TTL runs out)
 ```
 
+- `android/`: native Android app. CA key in Android Keystore (StrongBox/TEE), `yessh`/`nope`
+  buttons right on the notification, fingerprint/PIN per approval. See [android/README.md](android/README.md).
 - `pwa/`: static site, vanilla ES modules, no build step. Tests: `cd pwa && npm test`
   (needs `ssh-keygen` for the certificate checks).
 - `host/`: Go CLI. `cd host && go build ./cmd/yessh`, tests `go test ./...`.
@@ -19,5 +21,6 @@ ssh root@fleet-host     ✓ (until the TTL runs out)
 - `docs/`: [setup and ssh_config](docs/setup.md), [threat model](docs/threat-model.md).
 - [SPEC.md](SPEC.md): the design.
 
-Status: MVP. The CA key is protected only by the browser sandbox (non-extractable WebCrypto
-key). Keep a break-glass path to your fleet.
+Two phone apps, one protocol: the PWA (https://adotka.github.io/yessh/, CA key protected by the
+browser sandbox) and the Android app (CA key in secure hardware, recommended). Keep a
+break-glass path to your fleet.

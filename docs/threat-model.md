@@ -8,8 +8,8 @@ expires within hours, and every certificate needs a tap on the phone.
 
 | Asset | Where | Protection |
 |---|---|---|
-| CA private key (ECDSA P-256) | Phone, IndexedDB of the PWA origin | Non-extractable WebCrypto `CryptoKey` (browser sandbox only) |
-| PSK (32 bytes) | Phone (IndexedDB) and host (`~/.config/yessh/config.json`, 0600) | File permissions; never sent over ntfy |
+| CA private key (ECDSA P-256) | PWA: IndexedDB of the PWA origin. Android app: Keystore | PWA: non-extractable WebCrypto `CryptoKey` (browser sandbox only). Android: StrongBox/TEE, unlocked-device-only, optionally auth-per-use (biometric/PIN per signature) |
+| PSK (32 bytes) | Phone (PWA: IndexedDB; Android: file encrypted by a Keystore AES key) and host (`~/.config/yessh/config.json`, 0600) | File permissions; never sent over ntfy |
 | Ephemeral key + certificate | Host, `$XDG_RUNTIME_DIR/yessh/` (tmpfs, 0700/0600) | Short TTL, principal list |
 | Audit log | Phone, IndexedDB | Browser storage; export as JSON |
 
@@ -34,7 +34,7 @@ expires within hours, and every certificate needs a tap on the phone.
 | ntfy operator / network | DoS, prompt spam. No certs, no plaintext. |
 | PSK (e.g. host config file leaked) | Read requests (labels, principals, public keys); forge prompts on the phone; forge denials (DoS). **Cannot produce certificates.** Only the CA key signs, and only after a tap. Re-pair to rotate. |
 | Management host (root or the agent's user) | Can trigger requests and use any certificate that is currently valid. Cannot approve. Blast radius = TTL × principals. |
-| Phone browser profile (malware, root, backup extraction) | CA key usable or extractable → full fleet access. **Out of scope for the MVP**; this is the gap the planned native Android Keystore app closes. |
+| Phone browser profile (malware, root, backup extraction) | PWA: CA key usable or extractable → full fleet access. Android app: the key can't be extracted (hardware-bound, no backups). In per-approval mode, malware also can't use it without the user's biometric/PIN for each signature. A compromised OS (root) is out of scope. |
 | Phone unlocked in someone else's hands | They can approve pending requests. Use a screen lock. |
 
 ## Replay and freshness
