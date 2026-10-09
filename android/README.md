@@ -115,7 +115,8 @@ CI (`.github/workflows/android.yml`) runs all of the above, including the emulat
 
 Public domain under [the Unlicense](https://unlicense.org); see [LICENSE](../LICENSE). The APK
 also contains AndroidX, Jetpack Compose, kotlinx.serialization, kotlinx.coroutines and ZXing,
-which are under the Apache License 2.0.
+which are under the Apache License 2.0. The app shows all of them with their full license texts
+under **Setup → About → Open-source licenses** (also linked from the first-run screen).
 
 ## Security notes
 
