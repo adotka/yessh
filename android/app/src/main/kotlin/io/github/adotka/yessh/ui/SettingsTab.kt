@@ -169,6 +169,10 @@ fun SettingsTab(activity: MainActivity, onReset: () -> Unit) {
         Section("4. Policy")
         PolicyEditor()
 
+        Section("About")
+        Text("yessh is public domain (the Unlicense). Bundled libraries keep their own licenses.", style = MaterialTheme.typography.bodySmall)
+        OutlinedButton(onClick = { activity.showLicenses.value = true }, modifier = Modifier.padding(top = 4.dp)) { Text("Open-source licenses") }
+
         Section("Danger zone")
         var confirm by remember { mutableStateOf("") }
         Text("Deleting the CA is permanent. Fleet hosts will need the new CA line and the host must be re-paired.", style = MaterialTheme.typography.bodySmall)

@@ -25,6 +25,9 @@ class MainActivity : ComponentActivity() {
     /** Request opened from a notification tap. */
     val openRequest = mutableStateOf<String?>(null)
 
+    /** Open-source licenses screen, reachable before and after setup. */
+    val showLicenses = mutableStateOf(false)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // The pairing string (PSK) and approval details stay out of screenshots and the recents view.
@@ -34,7 +37,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             YesshTheme {
                 var paired by remember { mutableStateOf(appState.paired) }
-                if (!paired) {
+                if (showLicenses.value) {
+                    LicensesScreen(onClose = { showLicenses.value = false })
+                } else if (!paired) {
                     SetupScreen(onCreated = {
                         paired = true
                         ListenerService.start(this)

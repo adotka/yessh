@@ -149,6 +149,9 @@ fun SetupScreen(onCreated: () -> Unit) {
                 }
             },
         ) { if (busy) CircularProgressIndicator(Modifier.size(20.dp)) else Text("Create CA") }
+        TextButton(onClick = { (context as? MainActivity)?.showLicenses?.value = true }, modifier = Modifier.padding(top = 8.dp)) {
+            Text("Open-source licenses")
+        }
     }
 }
 
