@@ -85,3 +85,13 @@ Exit codes: `0` ok, `1` error (including a tampered response), `2` timeout, `3` 
   replaced by the Android app; the wire protocol is unchanged.
 
 Keep a break-glass path to your fleet until you've proven the flow.
+
+## License
+
+yessh is free and unencumbered software released into the public domain under
+[the Unlicense](https://unlicense.org). See [LICENSE](LICENSE).
+
+Third-party components keep their own licenses. The Go CLI uses `golang.org/x/crypto`
+(BSD-3-Clause). The Android app bundles AndroidX, Jetpack Compose, kotlinx.serialization,
+kotlinx.coroutines and ZXing (all Apache-2.0). The README animations use the Roboto and
+JetBrains Mono fonts (SIL OFL 1.1).

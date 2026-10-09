@@ -1,6 +1,7 @@
 {
   "name": "yessh-readme-media",
   "private": true,
+  "license": "Unlicense",
   "type": "module",
   "description": "Renders the README GIFs: node render.mjs (needs ffmpeg and gifsicle on PATH)",
   "scripts": {

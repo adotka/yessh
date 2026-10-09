@@ -111,6 +111,12 @@ YESSH_SIGNING_STORE_FILE=… YESSH_SIGNING_STORE_PASSWORD=… YESSH_SIGNING_KEY_
 
 CI (`.github/workflows/android.yml`) runs all of the above, including the emulator tests.
 
+## License
+
+Public domain under [the Unlicense](https://unlicense.org); see [LICENSE](../LICENSE). The APK
+also contains AndroidX, Jetpack Compose, kotlinx.serialization, kotlinx.coroutines and ZXing,
+which are under the Apache License 2.0.
+
 ## Security notes
 
 - The CA private key is generated inside Keystore and never exists in app memory.
