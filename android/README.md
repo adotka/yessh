@@ -70,8 +70,13 @@ keytool -genkeypair -v -keystore yessh-release.jks -alias yessh -keyalg EC -grou
 base64 -w0 yessh-release.jks   # value for YESSH_SIGNING_KEYSTORE_B64
 ```
 
-Add repository secrets: `YESSH_SIGNING_KEYSTORE_B64`, `YESSH_SIGNING_STORE_PASSWORD`,
-`YESSH_SIGNING_KEY_ALIAS` (`yessh`), `YESSH_SIGNING_KEY_PASSWORD`. Back up the `.jks` file and
+`keytool` asks for one password: its default PKCS12 format uses the same password for the store
+and the key.
+
+Add repository secrets: `YESSH_SIGNING_KEYSTORE_B64`, `YESSH_SIGNING_STORE_PASSWORD` (that
+password), and `YESSH_SIGNING_KEY_ALIAS` (`yessh`). `YESSH_SIGNING_KEY_PASSWORD` is only needed
+for an old JKS-format keystore with a separate key password; otherwise the store password is
+used. Back up the `.jks` file and
 passwords offline. Then push a tag:
 
 ```sh
@@ -88,8 +93,8 @@ Needs JDK 17 and the Android SDK (Android Studio, or `ANDROID_HOME` set).
 ```sh
 cd android
 ./gradlew :app:assembleDebug           # app/build/outputs/apk/debug/app-debug.apk
-YESSH_SIGNING_STORE_FILE=… YESSH_SIGNING_STORE_PASSWORD=… YESSH_SIGNING_KEY_ALIAS=… \
-YESSH_SIGNING_KEY_PASSWORD=… ./gradlew :app:assembleRelease
+YESSH_SIGNING_STORE_FILE=… YESSH_SIGNING_STORE_PASSWORD=… YESSH_SIGNING_KEY_ALIAS=yessh \
+  ./gradlew :app:assembleRelease
 ```
 
 ## Layout and tests

@@ -29,7 +29,9 @@ android {
                 storeFile = file(signingStore)
                 storePassword = System.getenv("YESSH_SIGNING_STORE_PASSWORD")
                 keyAlias = System.getenv("YESSH_SIGNING_KEY_ALIAS")
-                keyPassword = System.getenv("YESSH_SIGNING_KEY_PASSWORD")
+                // PKCS12 keystores (keytool's default) have one password for store and key.
+                keyPassword = System.getenv("YESSH_SIGNING_KEY_PASSWORD")?.ifEmpty { null }
+                    ?: System.getenv("YESSH_SIGNING_STORE_PASSWORD")
             }
         }
     }
