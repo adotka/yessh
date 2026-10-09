@@ -1,7 +1,7 @@
 # Local relay + fleet host for the end-to-end test. See e2e/README.md.
 services:
   ntfy:
-    image: binwiederhier/ntfy
+    image: mirror.gcr.io/binwiederhier/ntfy
     command: serve
     environment:
       NTFY_BASE_URL: http://localhost:18080
@@ -13,7 +13,7 @@ services:
     build:
       context: sshd
       args:
-        BASE: ${SSHD_BASE:-alpine:3.20}
+        BASE: ${SSHD_BASE:-mirror.gcr.io/library/alpine:3.20}
     volumes:
       - ./work/ca:/yessh:ro
     ports:

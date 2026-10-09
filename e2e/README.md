@@ -10,8 +10,8 @@ previous cert is untouched), timeout (exit 2), a tampered response signed by ano
 (rejected, nothing written), a wrong-PSK request (invisible to the phone), replayed requests,
 and `ssh` failing after the cert expires (~70 s; skip with `E2E_EXPIRY=0`).
 
-Requirements: Docker, Go, JDK 17, `ssh`/`ssh-keygen`. If Docker Hub is rate-limited, set
-`SSHD_BASE` to another Alpine-based image. `E2E_SSHD=local` uses the host's `/usr/sbin/sshd`
+Requirements: Docker, Go, JDK 17, `ssh`/`ssh-keygen`. Images come from `mirror.gcr.io` (Google's Docker
+Hub mirror) to avoid Docker Hub's anonymous pull limits; `SSHD_BASE` overrides the sshd base image. `E2E_SSHD=local` uses the host's `/usr/sbin/sshd`
 (run as root) instead of the container.
 
 The Keystore side (real hardware-backed signatures) is covered separately by the app's

@@ -1,5 +1,5 @@
-# Fleet host under test. BASE can be any Alpine-based image (override if Docker Hub is rate-limited).
-ARG BASE=alpine:3.20
+# Fleet host under test. BASE can be any Alpine-based image (Docker Hub images via mirror.gcr.io, which has no anonymous pull limit).
+ARG BASE=mirror.gcr.io/library/alpine:3.20
 FROM ${BASE}
 USER root
 RUN apk add --no-cache openssh-server \
