@@ -93,7 +93,7 @@ func (f *fakeNtfy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// phone simulates the PWA side with a Go ECDSA CA.
+// phone simulates the phone app with a Go ECDSA CA.
 type phone struct {
 	t      *testing.T
 	keys   protocol.Keys

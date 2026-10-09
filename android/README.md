@@ -1,14 +1,14 @@
 # yessh for Android
 
-Native version of the yessh phone CA. It speaks the same wire protocol as the PWA, so the `yessh`
-host CLI works unchanged. What's different:
+The phone side of yessh: it holds the CA and approves certificate requests from the `yessh`
+host CLI.
 
-| | PWA | Android app |
-|---|---|---|
-| CA key | Non-extractable WebCrypto key (browser sandbox) | Android Keystore, StrongBox when available, otherwise the TEE. Can't be exported, backed up or copied. |
-| Approve | Notification (ntfy app) → open PWA → tap `yessh` | **`yessh` / `nope` buttons on the notification itself** |
-| Per-approval check | None (anyone with the unlocked phone) | Fingerprint/face/PIN for every signature, enforced by the key itself (or one-tap mode, see below) |
-| Wake-up | ntfy Android app | Built-in listener (foreground service); the ntfy app isn't needed |
+- **CA key:** Android Keystore, StrongBox when available, otherwise the TEE. It can't be
+  exported, backed up or copied.
+- **Approve:** **`yessh` / `nope` buttons on the notification itself.**
+- **Per-approval check:** fingerprint/face/PIN for every signature, enforced by the key itself
+  (or one-tap mode, see below).
+- **Wake-up:** a built-in listener (foreground service); the ntfy app isn't needed.
 
 ## Approval modes
 
@@ -37,17 +37,19 @@ lower the TTL.
    - copy the CA line to fleet hosts (`TrustedUserCAKeys`),
    - **Show pairing string** and type/paste it into a shell on the management host:
      `yessh pair '<string>'`. Never route it through a coding agent.
-4. If the ntfy app is subscribed to the request topic (from the PWA setup), unsubscribe it there,
-   or you'll get two notifications.
+4. If the ntfy app is subscribed to the request topic, unsubscribe it there, or you'll get two
+   notifications.
 
-### Moving from the PWA
+### Moving from the old PWA
 
-The PWA's CA key can't be exported (by design), so the app creates a new CA:
+The PWA has been removed from this repo. Its CA key couldn't be exported (by design), so the app
+creates a new CA:
 
 1. Add the app's CA line to `/etc/ssh/yessh_ca.pub` on each fleet host **next to** the PWA's line.
    `TrustedUserCAKeys` accepts several keys, one per line.
 2. Re-pair the management host with the app's pairing string (`yessh pair '…'`).
-3. Once everything works, remove the PWA's CA line from the fleet and delete the CA in the PWA.
+3. Once everything works, remove the PWA's CA line from the fleet, then clear the PWA's site data
+   in the browser (that deletes its CA key).
 
 ## Signing key (read this before the first install)
 

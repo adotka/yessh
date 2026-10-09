@@ -2,13 +2,15 @@
 
 ## 1. Phone: create the CA
 
-1. Open the yessh PWA on your phone (install it with *Add to Home screen*).
-2. Tap **Create CA**. This generates a non-extractable ECDSA P-256 key and a random PSK.
-3. Under **Policy**, add the principals you want to be able to grant (e.g. `root`), and set
-   `maxTtl` / `defaultTtl`.
-4. Install the [ntfy Android app](https://ntfy.sh/) and subscribe to the request topic the PWA
-   shows (the **Subscribe in ntfy** link does this). If you self-host ntfy, point the app at your
-   server.
+1. Install the yessh Android app (see [android/README.md](../android/README.md); use the signed
+   release APK) and set a screen lock if you don't have one.
+2. Tap **Create CA** and choose the approval mode. This generates an ECDSA P-256 key inside
+   Android Keystore (StrongBox or TEE) and a random PSK.
+3. Under **Setup → Policy**, add the principals you want to be able to grant (e.g. `root`), and
+   set the maximum and default TTL.
+4. Allow notifications and background running, so requests pop up within seconds. The app
+   keeps its own connection to ntfy; you don't need the ntfy app. If you self-host ntfy, enter
+   your server when creating the CA.
 
 ## 2. Management host: install and pair
 
@@ -16,7 +18,7 @@
 cd host && go build -o ~/.local/bin/yessh ./cmd/yessh
 ```
 
-Copy the pairing string from the PWA and **type or paste it into a shell yourself**. Do not
+Copy the pairing string from the app (**Setup → Show pairing string**) and **type or paste it into a shell yourself**. Do not
 route it through a coding agent: it contains the PSK.
 
 ```sh
@@ -31,7 +33,7 @@ against the phone.
 On each fleet host, as root:
 
 ```sh
-yessh ca | ssh root@fleet-host 'cat > /etc/ssh/yessh_ca.pub'   # or copy the line from the PWA
+yessh ca | ssh root@fleet-host 'cat > /etc/ssh/yessh_ca.pub'   # or copy the line from the app
 ```
 
 `/etc/ssh/sshd_config`:

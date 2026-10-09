@@ -154,11 +154,10 @@ func TestSourceAddressAllowed(t *testing.T) {
 	}
 }
 
-// Certificates built by the other implementations:
-//   - testdata/js-cert.json: pwa/tools/gen-cert-fixture.mjs (the PWA's cert builder)
+// Certificates built by the phone implementation:
 //   - testdata/kotlin-cert.json: android core tests with YESSH_UPDATE_FIXTURES=1
 func TestVerifiesForeignCerts(t *testing.T) {
-	for _, name := range []string{"js-cert.json", "kotlin-cert.json"} {
+	for _, name := range []string{"kotlin-cert.json"} {
 		t.Run(name, func(t *testing.T) { verifyFixture(t, "testdata/"+name) })
 	}
 }

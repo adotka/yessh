@@ -81,7 +81,7 @@ class AppState(private val context: Context) {
 
     fun pairingString(): String {
         val s = store.settings()
-        // No PWA URL: the host then omits the ntfy Click header.
+        // No click URL: the host then omits the ntfy Click header.
         return Protocol.makePairing(Protocol.Pairing(s.ntfy, "", vault.load(), caLine(), s.token.ifEmpty { null }))
     }
 

@@ -38,7 +38,7 @@ const (
 const usage = `yessh: SSH certificates approved on your phone
 
 Usage:
-  yessh pair '<pairing string>'     store config from the PWA (type it yourself; it holds the PSK)
+  yessh pair '<pairing string>'     store config from the phone app (type it yourself; it holds the PSK)
   yessh ca                          print the CA public key line (for TrustedUserCAKeys)
   yessh request [-p principal]... [-t ttl] [--label L] [--timeout d]
   yessh ensure  [-p principal]... [-t ttl] [--min-remaining d] [--label L] [--timeout d]

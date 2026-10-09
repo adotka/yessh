@@ -15,7 +15,7 @@ import javax.crypto.Mac
 import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
-/** yessh wire protocol v1 (same as the PWA and the Go host). */
+/** yessh wire protocol v1 (same as the Go host). */
 object Protocol {
     const val VERSION = 1
     const val AAD_REQ = "yessh1|req"
