@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="common.css">
+<style>
+  .term { left: 20px; top: 20px; width: 800px; height: 480px; }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="term"><div class="bar"><i></i><i></i><i></i><span>you@mgmt-1: ~</span></div><div class="body" id="t"></div></div>
+</div>
+<script type="module">
+import { play, renderTerminal, $ } from "./common.js";
+
+// Output text as printed by the real `yessh` binary.
+const term = [
+  { at: 0.3, cmd: "yessh status" },
+  { at: 1.1, out: "Certificate:  /run/user/1000/yessh/id_yessh-cert.pub (valid)" },
+  { at: 1.1, out: "Key ID:       yessh:mgmt-1:lBqEdC4EVoj8Gw-qaAhOUA" },
+  { at: 1.1, out: "Principals:   root" },
+  { at: 1.1, out: "Valid until:  2026-10-09T22:32:41Z (52m18s left)" },
+  { at: 1.1, out: "Key:          SHA256:jimeCZJkS1JALEdgI24pau34tzlOOLgY7Frxeoix/Qk" },
+  { at: 1.1, out: "CA:           SHA256:lEkScFrUNCZtyISHz7ibBDbkF+tTZsFli/u5a1lr4ZQ" },
+  { at: 2.6, out: "# still valid: ensure is silent and asks the phone nothing", cls: "dim" },
+  { at: 2.8, cmd: "yessh ensure -p root && echo ok" },
+  { at: 4.4, out: "ok", cls: "ok" },
+  { at: 5.2, out: "# you tap nope on the phone", cls: "dim" },
+  { at: 5.4, cmd: "yessh request -p root -p deploy -t 30m --label ci-runner", cps: 30 },
+  { at: 7.6, out: "yessh: request sent (ci-runner for [root deploy], ttl 30m0s); approve it on your phone" },
+  { at: 9.6, out: "yessh: request denied on phone", cls: "err" },
+  { at: 10.0, cmd: "echo $?" },
+  { at: 10.6, out: "3" },
+  { at: 11.3, cmd: "yessh forget && yessh status" },
+  { at: 12.7, out: "yessh: no certificate", cls: "err" },
+  { at: 13.2, prompt: true },
+];
+
+play({
+  duration: 15.5,
+  width: 840,
+  height: 520,
+  render(t) {
+    renderTerminal($("#t"), term, t);
+  },
+});
+</script>
+</body>
+</html>

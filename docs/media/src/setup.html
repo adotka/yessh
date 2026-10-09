@@ -1,0 +1,106 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="common.css">
+<style>
+  .term { left: 24px; top: 46px; width: 590px; height: 470px; }
+  .phone { left: 650px; top: 42px; width: 280px; height: 486px; }
+  .l1 { left: 26px; top: 18px; }
+  .l2 { left: 654px; top: 18px; }
+  .app { overflow: hidden; }
+  .statusbar { background: var(--bg); }
+  #create, #setup { position: absolute; inset: 0; padding: 40px 16px 0; background: var(--bg); }
+  #setupBody { position: absolute; left: 16px; right: 16px; top: 40px; }
+  .spin { width: 20px; height: 20px; border-radius: 50%; border: 3px solid var(--on-green); border-right-color: transparent; }
+  .toast {
+    position: absolute; left: 50%; bottom: 80px; transform: translateX(-50%); z-index: 50; white-space: nowrap;
+    background: #e2e8f0; color: #0f172a; border-radius: 18px; padding: 8px 16px; font: 13px Roboto;
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="label l1">management host</div>
+  <div class="label l2">yessh app</div>
+  <div class="term"><div class="bar"><i></i><i></i><i></i><span>you@mgmt-1: ~</span></div><div class="body" id="t"></div></div>
+
+  <div class="phone"><div class="screen">
+    <div class="statusbar"><span>21:30</span><span class="cam"></span><span>5G ▮▮▮ 87%</span></div>
+    <div class="app">
+      <div id="create">
+        <h1>Create your SSH CA</h1>
+        <p class="small" style="color:var(--on-bg)">An ECDSA P-256 CA is generated inside this phone's secure hardware. The private key can't be exported or copied.</p>
+        <div class="field"><b>ntfy server</b>https://ntfy.sh</div>
+        <h2>Approval</h2>
+        <div class="radio"><i class="on"></i><div><b>Fingerprint / PIN for every approval (recommended)</b><span class="small">Tap yessh on the notification, then confirm.</span></div></div>
+        <div class="radio"><i></i><div><b>One tap while unlocked</b><span class="small">The key only works while the phone is unlocked.</span></div></div>
+        <div class="btn fill" id="createBtn" style="margin-top:14px">Create CA</div>
+      </div>
+
+      <div id="setup">
+        <div id="setupBody">
+          <h1>Setup</h1>
+          <h2>1. CA public key</h2>
+          <div class="card mono">ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBCy+TuZGSHI2ZLMe8XcDcI+6fjrfR1uu1v0WCiPjqmwUZD40we64ZpBebJRaGFXZuofO0CcT8CYK05xVfpTK1GQ= yessh-ca</div>
+          <div class="p" style="margin-top:6px">Key protection: StrongBox (dedicated secure chip)</div>
+          <h2>2. Pair the management host</h2>
+          <div class="btn out small" id="showBtn">Show pairing string</div>
+          <div id="pairing">
+            <div class="warn">Contains the shared secret. Type or paste it into a shell on your management host yourself.</div>
+            <div class="card mono" style="font-size:9px;line-height:1.35">yessh1:eyJ2IjoxLCJudGZ5IjoiaHR0cHM6Ly9udGZ5LnNoIiwicHdhIjoiIiwicHNrIjoiQndGY0lyaXJBSWVuaUEwYVNIRF9iMVowaVpDYnF3RXJhYTdkLXZZWndYSSIsImNhIjoiZWNkc2Etc2hhMi1uaXN0cDI1NiBBQUFBRTJWalpITmhMWE5vWVRJdGJtbHpkSEF5TlRZQUFBQUlibWx6ZEhBeU5UWUFBQUJCQkN5K1R1WkdTSEkyWkxNZThYY0RjSSs2ZmpyZlIxdXUxdjBXQ2lQanFtd1VaRDQwd2U2NFpwQmViSlJhR0ZYWnVvZk8wQ2NUOENZSzA1eFZmcFRLMUdRPSB5ZXNzaC1jYSJ9</div>
+            <div style="display:flex;gap:8px;margin-top:8px"><div class="btn out small" id="copyBtn">Copy</div><div class="btn out small">Hide</div></div>
+          </div>
+        </div>
+        <div class="navbar"><span>Requests</span><span>Log</span><span class="on">Setup</span></div>
+      </div>
+    </div>
+    <div class="toast" id="toast">Copied</div>
+    <div class="tapdot" id="tap"></div>
+  </div></div>
+</div>
+<script type="module">
+import { play, prog, renderTerminal, tap, $, window01 } from "./common.js";
+
+const pairing = $("#pairing .card").textContent;
+const term = [
+  { at: 0.2, prompt: true },
+  { at: 7.0, cmd: `yessh pair '${pairing}'`, typed: 12, cps: 14 },
+  { at: 8.6, out: "Wrote /home/you/.config/yessh/config.json" },
+  { at: 8.65, out: "ntfy: https://ntfy.sh" },
+  { at: 8.7, out: "CA:   ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBCy+TuZGSHI2ZLMe8XcDcI+6fjrfR1uu1v0WCiPjqmwUZD40we64ZpBebJRaGFXZuofO0CcT8CYK05xVfpTK1GQ= yessh-ca", cls: "hl" },
+  { at: 8.75, out: "Check that this CA line matches the one shown on your phone." },
+  { at: 9.6, cmd: "yessh ca | ssh root@web1.internal 'cat >> /etc/ssh/yessh_ca.pub'", cps: 26 },
+  { at: 12.4, prompt: true },
+];
+
+play({
+  duration: 14,
+  width: 960,
+  height: 540,
+  render(t) {
+    renderTerminal($("#t"), term, t);
+
+    // create → setup
+    const created = t >= 3.2;
+    $("#create").style.display = created ? "none" : "block";
+    $("#setup").style.display = created ? "block" : "none";
+    const btn = $("#createBtn");
+    btn.innerHTML = t > 2.35 && t < 3.2 ? '<div class="spin"></div>' : "Create CA";
+    btn.style.opacity = t > 2.35 && t < 3.2 ? 0.7 : 1;
+
+    // reveal pairing string (scroll up), then copy
+    const shown = t >= 4.9;
+    $("#showBtn").style.display = shown ? "none" : "flex";
+    $("#pairing").style.display = shown ? "block" : "none";
+    $("#setupBody").style.transform = `translateY(${-300 * prog(t, 5.1, 5.7)}px)`;
+    $("#toast").style.opacity = window01(t, 6.25, 7.6);
+
+    if (t < 3.5) tap($("#tap"), t, 2.25, 130, 431);
+    else if (t < 5.4) tap($("#tap"), t, 4.75, 130, 376);
+    else tap($("#tap"), t, 6.1, 48, 313);
+  },
+});
+</script>
+</body>
+</html>

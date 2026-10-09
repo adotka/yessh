@@ -1,0 +1,106 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="common.css">
+<style>
+  .term { left: 24px; top: 46px; width: 590px; height: 470px; }
+  .phone { left: 650px; top: 42px; width: 280px; height: 486px; }
+  .l1 { left: 26px; top: 18px; }
+  .l2 { left: 654px; top: 18px; }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="label l1">management host</div>
+  <div class="label l2">your phone</div>
+  <div class="term"><div class="bar"><i></i><i></i><i></i><span>you@mgmt-1: ~</span></div><div class="body" id="t"></div></div>
+
+  <div class="phone"><div class="screen" id="screen">
+    <div class="statusbar"><span>21:32</span><span class="cam"></span><span>5G ▮▮▮ 87%</span></div>
+    <div class="home">
+      <div class="clock">21:32</div>
+      <div class="date">Friday, October 9</div>
+      <div class="dock"><i></i><i></i><i class="yessh"></i><i></i></div>
+    </div>
+
+    <div class="notif" id="req">
+      <div class="hdr"><img src="icon.svg"> yessh · now</div>
+      <div class="title">yessh request from mgmt-1</div>
+      <div class="text">claude@mgmt-1 wants root for 1h</div>
+      <div class="mono">Key SHA256:jimeCZJkS1JALEdgI24pau…</div>
+      <div class="actions"><span id="nope">nope</span><span id="yes">yessh</span></div>
+    </div>
+
+    <div class="notif" id="done">
+      <div class="hdr"><img src="icon.svg"> yessh · now</div>
+      <div class="title">Approved: mgmt-1</div>
+      <div class="text" style="padding-bottom:10px">root for 1h</div>
+    </div>
+
+    <div class="scrim" id="scrim"></div>
+    <div class="sheet" id="sheet">
+      <div class="t">yessh: mgmt-1</div>
+      <div class="s">root for 1h</div>
+      <div class="d">claude@mgmt-1<br>Key SHA256:jimeCZJkS1JALEdgI…</div>
+      <div class="fp">
+        <svg id="fpicon" viewBox="0 0 68 68"><circle cx="34" cy="34" r="33" fill="#273244"/>
+          <g fill="none" stroke="#a5b4fc" stroke-width="2.6" stroke-linecap="round">
+            <path d="M22 40c0-8 5-14 12-14s12 6 12 14"/><path d="M27 44c0-6 3-10 7-10s7 4 7 10"/>
+            <path d="M34 40v8"/><path d="M18 34c2-9 8-15 16-15s14 6 16 15"/><path d="M24 50c-1-3-2-6-2-10"/><path d="M44 50c1-3 2-6 2-10"/>
+          </g></svg>
+        <svg id="okicon" viewBox="0 0 68 68" style="opacity:0"><circle cx="34" cy="34" r="33" fill="#22c55e"/>
+          <path d="M21 35l9 9 17-19" fill="none" stroke="#052e16" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="hint" id="hint">Touch the fingerprint sensor</div>
+      <div class="pin">Use PIN</div>
+    </div>
+    <div class="tapdot" id="tap"></div>
+  </div></div>
+</div>
+<script type="module">
+import { play, prog, renderTerminal, tap, $ } from "./common.js";
+
+const term = [
+  { at: 0.4, cmd: "ssh root@web1.internal", cps: 15 },
+  { at: 2.1, out: "yessh: request sent (mgmt-1 for [root], ttl 1h0m0s); approve it on your phone" },
+  { at: 6.7, out: "yessh: certificate for [root] valid until 2026-10-09T22:32:41Z", cls: "ok" },
+  { at: 6.85, out: "yessh: /run/user/1000/yessh/id_yessh-cert.pub", cls: "dim" },
+  { at: 7.4, out: "Welcome to Ubuntu 24.04.1 LTS (GNU/Linux 6.8.0-45-generic x86_64)", cls: "dim" },
+  { at: 7.5, out: "" },
+  { at: 7.7, prompt: "root@web1:~# " },
+];
+
+play({
+  duration: 11,
+  width: 960,
+  height: 540,
+  render(t) {
+    renderTerminal($("#t"), term, t);
+
+    // heads-up request notification
+    const inP = prog(t, 2.3, 2.7), outP = prog(t, 3.95, 4.25);
+    $("#req").style.transform = `translateY(${-170 * (1 - inP) - 170 * outP}px)`;
+    $("#req").style.opacity = inP * (1 - outP);
+    $("#yes").classList.toggle("press", t > 3.65 && t < 4.0);
+
+    // biometric sheet
+    const sIn = prog(t, 4.05, 4.4), sOut = prog(t, 6.05, 6.35);
+    $("#scrim").style.opacity = sIn * (1 - sOut);
+    $("#sheet").style.transform = `translateY(${100 * (1 - sIn) + 100 * sOut}%)`;
+    const ok = prog(t, 5.55, 5.75);
+    $("#okicon").style.opacity = ok;
+    $("#fpicon").style.opacity = 1 - ok;
+    $("#hint").textContent = t < 5.55 ? "Touch the fingerprint sensor" : "Authenticated";
+    if (t < 4.5) tap($("#tap"), t, 3.65, 122, 173);
+    else tap($("#tap"), t, 5.05, 130, 344);
+
+    // outcome notification
+    const dIn = prog(t, 6.3, 6.65), dOut = prog(t, 9.2, 9.5);
+    $("#done").style.transform = `translateY(${-130 * (1 - dIn) - 130 * dOut}px)`;
+    $("#done").style.opacity = dIn * (1 - dOut);
+  },
+});
+</script>
+</body>
+</html>

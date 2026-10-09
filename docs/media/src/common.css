@@ -1,0 +1,158 @@
+@font-face { font-family: Roboto; font-weight: 400; src: url(node_modules/@fontsource/roboto/files/roboto-latin-400-normal.woff2); }
+@font-face { font-family: Roboto; font-weight: 500; src: url(node_modules/@fontsource/roboto/files/roboto-latin-500-normal.woff2); }
+@font-face { font-family: Roboto; font-weight: 700; src: url(node_modules/@fontsource/roboto/files/roboto-latin-700-normal.woff2); }
+@font-face { font-family: Mono; font-weight: 400; src: url(node_modules/@fontsource/jetbrains-mono/files/jetbrains-mono-latin-400-normal.woff2); }
+@font-face { font-family: Mono; font-weight: 700; src: url(node_modules/@fontsource/jetbrains-mono/files/jetbrains-mono-latin-700-normal.woff2); }
+
+:root {
+  /* app theme (android/app ui/MainActivity.kt) */
+  --bg: #0f172a;
+  --surface-var: #1e293b;
+  --on-bg: #e2e8f0;
+  --muted: #94a3b8;
+  --green: #22c55e;
+  --on-green: #052e16;
+  --red: #f87171;
+  --stage: #0b1120;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; overflow: hidden; }
+body {
+  background: var(--stage);
+  font-family: Roboto, sans-serif;
+  color: var(--on-bg);
+  -webkit-font-smoothing: antialiased;
+}
+.stage { position: relative; width: 100%; height: 100%; }
+.label {
+  position: absolute; font: 500 13px Roboto; letter-spacing: .08em; text-transform: uppercase;
+  color: #64748b;
+}
+
+/* ---------------------------------------------------------------- terminal */
+.term {
+  position: absolute; background: #0d1117; border: 1px solid #263041; border-radius: 10px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, .45); overflow: hidden;
+}
+.term .bar { height: 30px; background: #161b22; display: flex; align-items: center; gap: 7px; padding: 0 12px; }
+.term .bar i { width: 11px; height: 11px; border-radius: 50%; display: block; }
+.term .bar i:nth-child(1) { background: #ff5f57; }
+.term .bar i:nth-child(2) { background: #febc2e; }
+.term .bar i:nth-child(3) { background: #28c840; }
+.term .bar span { margin-left: 10px; font: 12px Roboto; color: #8b949e; }
+.term .body {
+  position: absolute; top: 30px; left: 0; right: 0; bottom: 0; padding: 14px 16px; overflow: hidden;
+  font: 14px/1.55 Mono, monospace; color: #c9d1d9; white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.term .p { color: #7ee787; font-weight: 700; }
+.term .cur { background: #c9d1d9; display: inline-block; width: .6em; }
+.term .dim { color: #8b949e; }
+.term .ok { color: #7ee787; }
+.term .err { color: #ff7b72; }
+.term .hl { color: #f2cc60; }
+
+/* ---------------------------------------------------------------- phone */
+.phone {
+  position: absolute; border-radius: 38px; background: #000; padding: 10px;
+  box-shadow: 0 0 0 2px #1f2937, 0 24px 60px rgba(0, 0, 0, .55);
+}
+.screen {
+  position: relative; width: 100%; height: 100%; border-radius: 30px; overflow: hidden;
+  background: var(--bg);
+}
+.statusbar {
+  position: absolute; top: 0; left: 0; right: 0; height: 30px; padding: 0 20px; z-index: 30;
+  display: flex; align-items: center; justify-content: space-between; font: 500 13px Roboto; color: #e5e7eb;
+}
+.statusbar .cam { position: absolute; left: 50%; top: 9px; width: 12px; height: 12px; margin-left: -6px; border-radius: 50%; background: #000; }
+.home {
+  position: absolute; inset: 0;
+  background: radial-gradient(120% 80% at 20% 10%, #1d4ed8 0%, #0f172a 55%), #0f172a;
+}
+.home .clock { position: absolute; top: 70px; width: 100%; text-align: center; font: 300 56px Roboto; color: #f1f5f9; }
+.home .date { position: absolute; top: 140px; width: 100%; text-align: center; font: 15px Roboto; color: #cbd5e1; }
+.dock { position: absolute; bottom: 26px; left: 0; right: 0; display: flex; justify-content: space-evenly; }
+.dock i { width: 46px; height: 46px; border-radius: 50%; background: rgba(255, 255, 255, .14); display: block; }
+.dock i.yessh { background: #0f172a url(icon.svg) center/100% no-repeat; box-shadow: 0 0 0 1px rgba(255,255,255,.15); }
+
+/* heads-up notification */
+.notif {
+  position: absolute; left: 10px; right: 10px; top: 36px; z-index: 20;
+  background: #1f2633; border-radius: 22px; padding: 14px 16px 6px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .5);
+}
+.notif .hdr { display: flex; align-items: center; gap: 6px; font: 12px Roboto; color: #9ca3af; }
+.notif .hdr img { width: 16px; height: 16px; border-radius: 50%; }
+.notif .title { margin-top: 6px; font: 500 15px Roboto; color: #f3f4f6; }
+.notif .text { margin-top: 3px; font: 14px/1.35 Roboto; color: #d1d5db; }
+.notif .mono { font: 11.5px Mono; color: #9ca3af; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.notif .actions { display: flex; gap: 4px; margin-top: 6px; }
+.notif .actions span {
+  position: relative; padding: 9px 14px; border-radius: 18px; font: 500 14px Roboto; color: var(--green);
+}
+.notif .actions span.press { background: rgba(34, 197, 94, .18); }
+
+/* biometric prompt */
+.scrim { position: absolute; inset: 0; background: rgba(0, 0, 0, .55); z-index: 40; }
+.sheet {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 41; background: #1f2633;
+  border-radius: 28px 28px 0 0; padding: 26px 24px 30px; text-align: center;
+}
+.sheet .t { font: 500 20px Roboto; color: #f3f4f6; }
+.sheet .s { margin-top: 6px; font: 15px Roboto; color: #d1d5db; }
+.sheet .d { margin-top: 10px; font: 12px/1.5 Mono; color: #9ca3af; }
+.sheet .fp { position: relative; width: 68px; height: 68px; margin: 22px auto 10px; }
+.sheet .fp svg { position: absolute; inset: 0; }
+.sheet .hint { font: 14px Roboto; color: #cbd5e1; }
+.sheet .pin { margin-top: 16px; font: 500 14px Roboto; color: var(--green); }
+
+/* app (Material 3 dark, as in the Compose UI) */
+.app { position: absolute; inset: 0; background: var(--bg); padding: 40px 16px 0; }
+.app h1 { font: 400 24px Roboto; color: var(--on-bg); margin: 6px 0 10px; }
+.app h2 { font: 500 16px Roboto; color: var(--on-bg); margin: 18px 0 8px; }
+.app p, .app .p { font: 14px/1.45 Roboto; color: var(--on-bg); }
+.app .small { font: 12px/1.4 Roboto; color: var(--muted); }
+.app .mono { font: 12px/1.45 Mono; color: var(--on-bg); word-break: break-all; }
+.card { background: var(--surface-var); border-radius: 12px; padding: 12px 14px; margin: 8px 0; }
+.field { position: relative; border: 1px solid #64748b; border-radius: 6px; padding: 14px 12px 12px; margin: 14px 0 8px; font: 15px Roboto; }
+.field b { position: absolute; top: -8px; left: 10px; padding: 0 4px; background: var(--bg); font: 12px Roboto; color: var(--muted); }
+.btn {
+  display: flex; align-items: center; justify-content: center; height: 48px; border-radius: 24px;
+  font: 500 15px Roboto; position: relative;
+}
+.btn.fill { background: var(--green); color: var(--on-green); }
+.btn.out { border: 1px solid #64748b; color: var(--green); }
+.btn.out.red { color: var(--red); }
+.btn.big { height: 56px; font: 700 20px Mono; }
+.btn.small { display: inline-flex; height: 38px; padding: 0 16px; font-size: 14px; }
+.row { display: flex; gap: 12px; }
+.row > * { flex: 1; }
+.radio { display: flex; gap: 12px; margin: 10px 0; }
+.radio i { flex: none; width: 20px; height: 20px; margin-top: 2px; border-radius: 50%; border: 2px solid var(--muted); position: relative; }
+.radio i.on { border-color: var(--green); }
+.radio i.on::after { content: ""; position: absolute; inset: 3px; border-radius: 50%; background: var(--green); }
+.radio b { font: 500 14px Roboto; display: block; }
+.check { display: flex; align-items: center; gap: 12px; margin: 6px 0; font: 15px Roboto; }
+.check i { width: 18px; height: 18px; border-radius: 3px; border: 2px solid var(--muted); position: relative; }
+.check i.on { background: var(--green); border-color: var(--green); }
+.check i.on::after { content: ""; position: absolute; left: 4px; top: 0; width: 5px; height: 10px; border: solid var(--on-green); border-width: 0 2px 2px 0; transform: rotate(45deg); }
+.kv { display: grid; grid-template-columns: 96px 1fr; gap: 4px 8px; font: 14px Roboto; }
+.kv span:nth-child(odd) { color: var(--muted); }
+.warn { background: #7f1d1d; color: #fecaca; border-radius: 12px; padding: 10px 12px; font: 13px/1.4 Roboto; margin: 8px 0; }
+.navbar {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 64px; background: #1a2233;
+  display: flex; justify-content: space-around; align-items: center; font: 500 12px Roboto; color: var(--muted);
+}
+.navbar span { text-align: center; }
+.navbar span.on { color: var(--on-bg); }
+.navbar span.on::before { content: ""; display: block; width: 56px; height: 26px; margin: 0 auto 4px; border-radius: 13px; background: rgba(34,197,94,.25); }
+.navbar span:not(.on)::before { content: ""; display: block; width: 56px; height: 26px; margin: 0 auto 4px; }
+.menu { position: absolute; background: #273244; border-radius: 6px; padding: 6px 0; box-shadow: 0 8px 20px rgba(0,0,0,.4); z-index: 5; }
+.menu div { padding: 9px 22px; font: 14px Roboto; }
+.menu div.sel { background: rgba(255,255,255,.08); }
+
+.tapdot {
+  position: absolute; width: 44px; height: 44px; border-radius: 50%; z-index: 100;
+  background: rgba(255, 255, 255, .55); box-shadow: 0 0 0 2px rgba(255, 255, 255, .8); pointer-events: none; opacity: 0;
+}

@@ -1,0 +1,168 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="common.css">
+<style>
+  .phone { left: 60px; top: 22px; width: 280px; height: 496px; }
+  .statusbar { background: transparent; }
+  .app { display: none; }
+  .app .back { color: var(--green); font: 500 14px Roboto; margin: 2px 0 2px; }
+  #reqScreen, #doneScreen, #logScreen, #listScreen { position: absolute; inset: 0; padding: 40px 16px 0; }
+  #reqScreen h1 { font-size: 20px; margin: 2px 0 8px; }
+  #reqScreen h2 { margin: 10px 0 2px; font-size: 15px; }
+  #reqScreen .card { margin: 6px 0 0; padding: 8px 12px; }
+  #reqScreen .check { margin: 2px 0; }
+  #reqScreen .kv { font-size: 13px; gap: 2px 8px; }
+  .ttlbtn { display: inline-flex; height: 36px; padding: 0 18px; align-items: center; border: 1px solid #64748b; border-radius: 18px; color: var(--green); font: 500 14px Roboto; }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="phone"><div class="screen">
+    <div class="statusbar" id="sb"><span>21:34</span><span class="cam"></span><span>5G ▮▮▮ 86%</span></div>
+    <div class="home">
+      <div class="clock">21:34</div>
+      <div class="date">Friday, October 9</div>
+      <div class="dock"><i></i><i></i><i class="yessh"></i><i></i></div>
+    </div>
+    <div class="notif" id="req">
+      <div class="hdr"><img src="icon.svg"> yessh · now</div>
+      <div class="title">yessh request from mgmt-1</div>
+      <div class="text">claude@mgmt-1 wants root, deploy for 1h</div>
+      <div class="mono">Key SHA256:Qx7vT0mC3k2b9yR1uWfGh8LpZs…</div>
+      <div class="actions"><span>nope</span><span>yessh</span></div>
+    </div>
+
+    <div class="app" id="app">
+      <div id="reqScreen">
+        <div class="back">← Back</div>
+        <h1>Certificate for mgmt-1?</h1>
+        <div class="kv">
+          <span>From</span><span>mgmt-1</span>
+          <span>Who</span><span>claude@mgmt-1</span>
+          <span>Age</span><span id="age">3s ago</span>
+          <span>Requested</span><span>root, deploy for 4h</span>
+        </div>
+        <div class="card"><div class="small">Ephemeral key fingerprint</div><div class="mono" style="font-weight:700">SHA256:Qx7vT0mC3k2b9yR1uWfGh8LpZsN4aE6dJ0oVcXy2Ki8</div></div>
+        <h2>Principals</h2>
+        <div class="check"><i class="on"></i>root</div>
+        <div class="check"><i class="on" id="deployBox"></i>deploy</div>
+        <h2>Valid for</h2>
+        <div style="position:relative">
+          <div class="ttlbtn" id="ttl">1h</div>
+          <div class="menu" id="menu" style="left:0;top:-196px;width:120px">
+            <div>5m</div><div id="m15">15m</div><div>30m</div><div class="sel">1h</div><div>2h</div><div>4h</div>
+          </div>
+        </div>
+        <div class="row" style="margin-top:14px"><div class="btn out red big">nope</div><div class="btn fill big" id="yesBtn">yessh</div></div>
+      </div>
+      <div id="doneScreen">
+        <div class="back">← Back</div>
+        <h1>Approved</h1>
+        <p>mgmt-1: root for 15m (serial 1791578042117)</p>
+      </div>
+      <div id="listScreen">
+        <h1 style="display:flex;justify-content:space-between;align-items:center;font-size:21px">Pending requests <span class="btn out small" style="font-size:13px">Refresh</span></h1>
+        <div class="small">Listener: Connected to ntfy.sh</div>
+        <p style="margin-top:22px">Nothing waiting. New requests appear here and as a notification.</p>
+      </div>
+      <div id="logScreen">
+        <h1 style="display:flex;justify-content:space-between;align-items:center">Log <span class="btn out small" style="font-size:13px">Export</span></h1>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between"><b style="font:700 14px Roboto">mgmt-1</b><span style="color:var(--green);font:14px Roboto">approved</span></div>
+          <div class="small">Oct 9, 2026, 9:34:12 PM</div>
+          <div class="p">root for 15m · claude@mgmt-1</div>
+          <div class="small">serial 1791578042117</div>
+          <div class="mono" style="font-size:11px">SHA256:Qx7vT0mC3k2b9yR1uWfGh8LpZsN4aE6dJ0oVcXy2Ki8</div>
+        </div>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between"><b style="font:700 14px Roboto">mgmt-1</b><span style="color:var(--green);font:14px Roboto">approved</span></div>
+          <div class="small">Oct 9, 2026, 9:32:40 PM</div>
+          <div class="p">root for 1h · claude@mgmt-1</div>
+          <div class="small">serial 1791577960342</div>
+        </div>
+      </div>
+      <div class="navbar" id="nav"><span id="navReq">Requests</span><span id="navLog">Log</span><span>Setup</span></div>
+    </div>
+
+    <div class="scrim" id="scrim"></div>
+    <div class="sheet" id="sheet">
+      <div class="t">yessh: mgmt-1</div>
+      <div class="s">root for 15m</div>
+      <div class="d">claude@mgmt-1<br>Key SHA256:Qx7vT0mC3k2b9yR1u…</div>
+      <div class="fp">
+        <svg id="fpicon" viewBox="0 0 68 68"><circle cx="34" cy="34" r="33" fill="#273244"/>
+          <g fill="none" stroke="#a5b4fc" stroke-width="2.6" stroke-linecap="round">
+            <path d="M22 40c0-8 5-14 12-14s12 6 12 14"/><path d="M27 44c0-6 3-10 7-10s7 4 7 10"/>
+            <path d="M34 40v8"/><path d="M18 34c2-9 8-15 16-15s14 6 16 15"/><path d="M24 50c-1-3-2-6-2-10"/><path d="M44 50c1-3 2-6 2-10"/>
+          </g></svg>
+        <svg id="okicon" viewBox="0 0 68 68" style="opacity:0"><circle cx="34" cy="34" r="33" fill="#22c55e"/>
+          <path d="M21 35l9 9 17-19" fill="none" stroke="#052e16" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="hint" id="hint">Touch the fingerprint sensor</div>
+      <div class="pin">Use PIN</div>
+    </div>
+    <div class="tapdot" id="tap"></div>
+  </div></div>
+</div>
+<script type="module">
+import { play, prog, tap, $ } from "./common.js";
+
+const show = (id, on) => ($(id).style.display = on ? "block" : "none");
+
+play({
+  duration: 14,
+  width: 400,
+  height: 540,
+  render(t) {
+    // notification, then the app opens on the request
+    const nIn = prog(t, 0.4, 0.8);
+    const opened = t >= 2.0;
+    $("#req").style.transform = `translateY(${-170 * (1 - nIn)}px)`;
+    $("#req").style.opacity = opened ? 0 : nIn;
+    const appIn = prog(t, 2.0, 2.3);
+    $("#app").style.display = opened ? "block" : "none";
+    $("#app").style.opacity = appIn;
+    $("#app").style.transform = `scale(${0.94 + 0.06 * appIn})`;
+    $("#sb").style.background = opened ? "var(--bg)" : "transparent";
+
+    const approved = t >= 8.75, onList = t >= 10.1, onLog = t >= 11.0;
+    show("#reqScreen", !approved);
+    show("#doneScreen", approved && !onList);
+    show("#listScreen", onList && !onLog);
+    show("#logScreen", onLog);
+    $("#nav").style.display = onList ? "flex" : "none";
+    $("#navLog").className = onLog ? "on" : "";
+    $("#navReq").className = onList && !onLog ? "on" : "";
+
+    $("#age").textContent = `${3 + Math.max(0, Math.floor(t - 2))}s ago`;
+    $("#deployBox").className = t >= 3.55 ? "" : "on";
+    const menuOpen = t >= 4.65 && t < 5.65;
+    $("#menu").style.display = menuOpen ? "block" : "none";
+    $("#m15").className = t >= 5.45 ? "sel" : "";
+    $("#ttl").textContent = t >= 5.65 ? "15m" : "1h";
+
+    // biometric
+    const sIn = prog(t, 6.75, 7.1), sOut = prog(t, 8.45, 8.75);
+    $("#scrim").style.opacity = sIn * (1 - sOut);
+    $("#sheet").style.transform = `translateY(${100 * (1 - sIn) + 100 * sOut}%)`;
+    const ok = prog(t, 7.95, 8.15);
+    $("#okicon").style.opacity = ok;
+    $("#fpicon").style.opacity = 1 - ok;
+    $("#hint").textContent = t < 7.95 ? "Touch the fingerprint sensor" : "Authenticated";
+
+    const T = $("#tap");
+    if (t < 2.5) tap(T, t, 1.6, 130, 80);          // notification body
+    else if (t < 4.2) tap(T, t, 3.45, 25, 292);    // untick deploy
+    else if (t < 5.2) tap(T, t, 4.55, 43, 349);    // TTL button
+    else if (t < 6.0) tap(T, t, 5.4, 47, 192);     // 15m
+    else if (t < 7.3) tap(T, t, 6.6, 190, 409);    // yessh
+    else if (t < 9) tap(T, t, 7.45, 130, 354);     // fingerprint
+    else if (t < 10.4) tap(T, t, 9.95, 26, 50);    // Back
+    else tap(T, t, 10.9, 130, 440);                // Log tab
+  },
+});
+</script>
+</body>
+</html>
