@@ -1,0 +1,15 @@
+{
+  "name": "yessh-brand",
+  "private": true,
+  "license": "Unlicense",
+  "type": "module",
+  "description": "Generates the yessh wordmark, mark, app icon vectors and social preview: node build.mjs",
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "devDependencies": {
+    "@fontsource/inter": "5.3.0",
+    "opentype.js": "2.0.0",
+    "playwright": "1.56.1"
+  }
+}

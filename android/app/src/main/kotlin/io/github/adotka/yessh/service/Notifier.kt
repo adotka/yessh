@@ -68,14 +68,14 @@ object Notifier {
         val nid = notificationId(req.id)
         val ev = item.evaluation
         val b = NotificationCompat.Builder(context, CHANNEL_REQUESTS)
-            .setSmallIcon(R.drawable.ic_stat_key)
+            .setSmallIcon(R.drawable.ic_stat_yessh)
             .setContentTitle("yessh request from ${req.label}")
             .setCategory(NotificationCompat.CATEGORY_MESSAGE)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
             .setPublicVersion(
                 NotificationCompat.Builder(context, CHANNEL_REQUESTS)
-                    .setSmallIcon(R.drawable.ic_stat_key)
+                    .setSmallIcon(R.drawable.ic_stat_yessh)
                     .setContentTitle("yessh: certificate request")
                     .setContentText("Unlock to review")
                     .build(),
@@ -98,8 +98,8 @@ object Notifier {
                         "\nTap the notification to change principals or TTL.",
                 ),
             )
-            b.addAction(action(context, R.drawable.ic_stat_key, "nope", denyIntent(context, req.id)))
-            b.addAction(action(context, R.drawable.ic_stat_key, "yessh", approveIntent(context, req.id, ev.principals, ev.ttl)))
+            b.addAction(action(context, R.drawable.ic_stat_yessh, "nope", denyIntent(context, req.id)))
+            b.addAction(action(context, R.drawable.ic_stat_yessh, "yessh", approveIntent(context, req.id, ev.principals, ev.ttl)))
         } else {
             val missing = (ev as Protocol.Evaluation.Rejected).principals.joinToString(", ")
             b.setContentText("${req.who} wants $missing (not in your allowlist)")
@@ -108,7 +108,7 @@ object Notifier {
                     "${req.who} wants $missing for ${fmtDuration(req.ttl)}, but none of these principals are allowed yet.\nTap to review.",
                 ),
             )
-            b.addAction(action(context, R.drawable.ic_stat_key, "nope", denyIntent(context, req.id)))
+            b.addAction(action(context, R.drawable.ic_stat_yessh, "nope", denyIntent(context, req.id)))
         }
         post(context, nid, b.build())
     }
@@ -146,7 +146,7 @@ object Notifier {
     fun showOutcome(context: Context, requestId: String, title: String, text: String) {
         if (!canPost(context)) return
         val n = NotificationCompat.Builder(context, CHANNEL_REQUESTS)
-            .setSmallIcon(R.drawable.ic_stat_key)
+            .setSmallIcon(R.drawable.ic_stat_yessh)
             .setContentTitle(title)
             .setContentText(text)
             .setContentIntent(openAppIntent(context, null))
@@ -162,7 +162,7 @@ object Notifier {
 
     fun listener(context: Context, status: String): Notification =
         NotificationCompat.Builder(context, CHANNEL_LISTENER)
-            .setSmallIcon(R.drawable.ic_stat_key)
+            .setSmallIcon(R.drawable.ic_stat_yessh)
             .setContentTitle("yessh is listening for requests")
             .setContentText(status)
             .setPriority(NotificationCompat.PRIORITY_MIN)
