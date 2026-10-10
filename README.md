@@ -5,7 +5,7 @@
   </picture>
 </h1>
 
-<p align="center"><b><i>yess</i></b> + <b>ssh</b>: a phone-held SSH certificate authority with an approval tap for every certificate.</p>
+<p align="center">Phone-held SSH certificate authority with an approval tap for every certificate.</p>
 
 ![ssh on the management host asks for a certificate; the phone shows a notification with nope and yessh buttons; one tap and a fingerprint later the ssh session opens](docs/media/flow.gif)
 
