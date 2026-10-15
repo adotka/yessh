@@ -108,4 +108,49 @@ class PhoneTest {
             assertNull(phone.find("A".repeat(22)))
         }
     }
+
+    @Test
+    fun doubleApprovalPublishesOnce(): Unit = env().run {
+        fake.use {
+            phone.allowPrincipals(listOf("root"))
+            val id = send()
+            phone.refresh()
+            val first = phone.prepare(id)
+            val second = phone.prepare(id)
+            phone.complete(first, ca.signDer(first.toBeSigned))
+            val ex = assertFailsWith<Phone.RequestException> { phone.complete(second, ca.signDer(second.toBeSigned)) }
+            assertEquals("request already answered", ex.message)
+            assertEquals(1, responses().size)
+            assertEquals(1, store.log().size)
+        }
+    }
+
+    @Test
+    fun denyAfterApprovalThrows(): Unit = env().run {
+        fake.use {
+            phone.allowPrincipals(listOf("root"))
+            val id = send()
+            phone.refresh()
+            val prepared = phone.prepare(id)
+            phone.complete(prepared, ca.signDer(prepared.toBeSigned))
+            val ex = assertFailsWith<Phone.RequestException> { phone.deny(id) }
+            assertEquals("request already answered", ex.message)
+            assertEquals(1, responses().size)
+            assertEquals(1, store.log().size)
+        }
+    }
+
+    @Test
+    fun invalidSourceAddressPolicyRefusesToPrepare(): Unit = env().run {
+        fake.use {
+            phone.allowPrincipals(listOf("root"))
+            store.setPolicy(store.policy().copy(sourceAddress = "example.com"))
+            val id = send()
+            phone.refresh()
+            val ex = assertFailsWith<Phone.RequestException> { phone.prepare(id) }
+            assertEquals("policy source-address is invalid", ex.message)
+            store.setPolicy(store.policy().copy(sourceAddress = "10.0.0.0/8"))
+            phone.prepare(id)
+        }
+    }
 }

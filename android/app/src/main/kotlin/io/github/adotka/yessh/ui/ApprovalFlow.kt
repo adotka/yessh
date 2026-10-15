@@ -62,7 +62,9 @@ object ApprovalFlow {
             .setSubtitle("${prepared.principals.joinToString(", ")} for ${fmtDuration(prepared.ttl)}")
             .setDescription("${req.who}\nKey ${prepared.item.fingerprint}")
             .setAllowedAuthenticators(Authenticators.BIOMETRIC_STRONG or Authenticators.DEVICE_CREDENTIAL)
-            .setConfirmationRequired(false)
+            // Passive biometrics (face) would otherwise sign the instant the face is recognised;
+            // an explicit confirm step avoids accidental approvals. Ignored for fingerprint.
+            .setConfirmationRequired(true)
             .build()
         prompt.authenticate(
             BiometricPrompt.CryptoObject(signature),

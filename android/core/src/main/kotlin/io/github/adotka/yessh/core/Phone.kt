@@ -130,6 +130,9 @@ class Phone(
         if (t <= 0) throw RequestException("bad ttl")
         val now = clock()
         val p = item.policy
+        if (p.sourceAddress.isNotEmpty() && !Protocol.validSourceAddress(p.sourceAddress)) {
+            throw RequestException("policy source-address is invalid")
+        }
         val template = SshCert.Template(
             subject = item.req.pubkey,
             keyId = "yessh:${item.req.label}:${item.req.id}",
@@ -143,31 +146,58 @@ class Phone(
         return Prepared(item, SshCert.toBeSigned(template, caPoint), chosen, t, now)
     }
 
-    /** Attach the DER signature, publish the response, and record it. */
+    /** Ids whose response is being published right now (guards concurrent complete/deny of one request). */
+    private val inFlight = HashSet<String>()
+
+    /** Throws if [id] was already answered (or is being answered); otherwise reserves it. */
+    @Synchronized
+    private fun claim(id: String) {
+        if (id in store.seen(clock()) || !inFlight.add(id)) throw RequestException("request already answered")
+    }
+
+    @Synchronized
+    private fun release(id: String) {
+        inFlight.remove(id)
+    }
+
+    /**
+     * Attach the DER signature, publish the response, and record it. Re-checks that the request was not
+     * answered since [prepare] (no freshness re-check: the host is the final judge of that).
+     */
     fun complete(prepared: Prepared, derSignature: ByteArray): Protocol.AuditEntry {
-        val cert = SshCert.assemble(prepared.unsigned, derSignature)
         val req = prepared.item.req
-        respond(Protocol.Response(req.id, prepared.now, "approved", cert))
-        val audit = Protocol.AuditEntry(
-            at = prepared.now, decision = "approved", id = req.id, label = req.label, who = req.who,
-            principals = prepared.principals, ttl = prepared.ttl, fingerprint = prepared.item.fingerprint,
-            serial = prepared.unsigned.serial.toString(), keyId = prepared.unsigned.keyId,
-        )
-        record(req.id, audit)
-        return audit
+        claim(req.id)
+        try {
+            val cert = SshCert.assemble(prepared.unsigned, derSignature)
+            respond(Protocol.Response(req.id, prepared.now, "approved", cert))
+            val audit = Protocol.AuditEntry(
+                at = prepared.now, decision = "approved", id = req.id, label = req.label, who = req.who,
+                principals = prepared.principals, ttl = prepared.ttl, fingerprint = prepared.item.fingerprint,
+                serial = prepared.unsigned.serial.toString(), keyId = prepared.unsigned.keyId,
+            )
+            record(req.id, audit)
+            return audit
+        } finally {
+            release(req.id)
+        }
     }
 
     fun deny(id: String): Protocol.AuditEntry {
         val item = evaluate(id) ?: throw RequestException("unknown request")
         val req = item.req
-        val now = clock()
-        respond(Protocol.Response(req.id, now, "denied"))
-        val audit = Protocol.AuditEntry(
-            at = now, decision = "denied", id = req.id, label = req.label, who = req.who,
-            principals = req.principals, ttl = req.ttl, fingerprint = item.fingerprint,
-        )
-        record(req.id, audit)
-        return audit
+        claim(req.id)
+        try {
+            val now = clock()
+            respond(Protocol.Response(req.id, now, "denied"))
+            val audit = Protocol.AuditEntry(
+                at = now, decision = "denied", id = req.id, label = req.label, who = req.who,
+                principals = req.principals, ttl = req.ttl, fingerprint = item.fingerprint,
+            )
+            record(req.id, audit)
+            return audit
+        } finally {
+            release(req.id)
+        }
     }
 
     private fun respond(r: Protocol.Response) {

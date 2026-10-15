@@ -11,6 +11,7 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"unicode/utf8"
 
 	"golang.org/x/crypto/ssh"
 
@@ -51,6 +52,8 @@ func TestPairCAStatusForget(t *testing.T) {
 	}
 	if code, out, stderr := runCLI("pair", pairing); code != 0 || !strings.Contains(out, "ecdsa-sha2-nistp256") {
 		t.Fatalf("pair: %d %s %s", code, out, stderr)
+	} else if !strings.Contains(out, "warning: ntfy URL is plain http") {
+		t.Errorf("no plain-http warning for http:// relay: %s", out)
 	}
 	st, err := os.Stat(os.Getenv("YESSH_CONFIG"))
 	if err != nil || st.Mode().Perm() != 0o600 {
@@ -130,5 +133,55 @@ func installCert(t *testing.T, ca ssh.Signer, principals []string, ttl time.Dura
 	}
 	if err := p.Install(d, strings.TrimSpace(string(ssh.MarshalAuthorizedKey(c)))); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestSanitizeWho(t *testing.T) {
+	for name, tc := range map[string]struct{ user, host, want string }{
+		"plain":      {"alice", "box", "alice@box"},
+		"control":    {"al\x00ice\x1b", "bo\nx\x7f", "alice@box"},
+		"c1 control": {"al\u0085ice", "box", "alice@box"},
+		"bidi":       {"alice\u202e", "\u2066box\u2069", "alice@box"},
+		"zero width": {"al\u200bi\u200dce\ufeff", "box", "alice@box"},
+		"separators": {"alice\u2028", "bo\u2029x", "alice@box"},
+		"unicode ok": {"zoë", "ホスト", "zoë@ホスト"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			if got := sanitizeWho(tc.user, tc.host); got != tc.want {
+				t.Errorf("got %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestSanitizeWhoTruncatesOnRuneBoundary(t *testing.T) {
+	// 3-byte runes: 127 ASCII bytes + one 3-byte rune would straddle the 128 limit.
+	got := sanitizeWho(strings.Repeat("a", 120), strings.Repeat("ホ", 10))
+	if len(got) > 128 || !utf8.ValidString(got) {
+		t.Fatalf("len=%d valid=%v: %q", len(got), utf8.ValidString(got), got)
+	}
+	if want := strings.Repeat("a", 120) + "@" + strings.Repeat("ホ", 2); got != want {
+		t.Errorf("got %q, want %q", got, want)
+	}
+	long := sanitizeWho(strings.Repeat("a", 300), "h")
+	if len(long) != 128 {
+		t.Errorf("len = %d", len(long))
+	}
+}
+
+func TestPairNoWarningForHTTPS(t *testing.T) {
+	ca, _ := sandbox(t)
+	psk := make([]byte, 32)
+	pairing, err := protocol.EncodePairing(protocol.Pairing{
+		V: 1, Ntfy: "https://ntfy.example", PWA: "https://pwa.example/",
+		PSK: base64.RawURLEncoding.EncodeToString(psk),
+		CA:  strings.TrimSpace(string(ssh.MarshalAuthorizedKey(ca.PublicKey()))) + " yessh-ca",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	code, out, stderr := runCLI("pair", pairing)
+	if code != 0 || strings.Contains(out, "warning") {
+		t.Fatalf("pair: %d %s %s", code, out, stderr)
 	}
 }

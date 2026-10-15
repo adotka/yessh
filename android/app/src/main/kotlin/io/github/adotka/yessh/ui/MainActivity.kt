@@ -32,6 +32,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         // The pairing string (PSK) and approval details stay out of screenshots and the recents view.
         window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+        // Drop touches that arrive through an overlay (tapjacking), so the yessh button can't be pressed blind.
+        window.decorView.filterTouchesWhenObscured = true
         enableEdgeToEdge()
         openRequest.value = intent.getStringExtra(Notifier.EXTRA_ID)
         setContent {

@@ -133,7 +133,9 @@ object Protocol {
     private val ID_RE = Regex("^[A-Za-z0-9_-]{22}$")
     private val LABEL_RE = Regex("^[A-Za-z0-9._-]{1,64}$")
     private val PRINCIPAL_RE = Regex("^[A-Za-z0-9._@+-]{1,64}$")
-    private val CONTROL = Regex("[\\x00-\\x1f\\x7f]")
+
+    /** Unicode control, format (bidi overrides, zero-width), line and paragraph separator characters. */
+    private val CONTROL = Regex("[\\p{Cc}\\p{Cf}\\p{Zl}\\p{Zp}]")
 
     /** Lenient decode of a decrypted request; fields may be missing or wrong (evaluate() says so). */
     fun parseRequest(plaintext: String): Request? = try {
@@ -193,6 +195,55 @@ object Protocol {
         if (principals.isEmpty()) return Evaluation.Rejected(Reason.PRINCIPALS_NOT_ALLOWED, principals = requested)
         val maxTtl = minOf(req.ttl, policy.maxTtl)
         return Evaluation.Ok(principals, maxTtl, minOf(maxTtl, policy.defaultTtl))
+    }
+
+    // ---- source-address validation ----
+
+    /**
+     * True if [s] is acceptable as the certificate's `source-address` critical option: empty (unset) or a
+     * comma-separated list of IPv4/IPv6 addresses or CIDRs. No wildcards or hostnames; no resolver is used.
+     */
+    fun validSourceAddress(s: String): Boolean {
+        if (s.isEmpty()) return true
+        return s.split(',').all { validAddrOrCidr(it.trim()) }
+    }
+
+    private fun validAddrOrCidr(item: String): Boolean {
+        if (item.isEmpty()) return false
+        val parts = item.split('/')
+        if (parts.size > 2) return false
+        val addr = parts[0]
+        val v4 = validIPv4(addr)
+        val v6 = !v4 && validIPv6(addr)
+        if (!v4 && !v6) return false
+        if (parts.size == 1) return true
+        val prefix = parts[1]
+        if (prefix.isEmpty() || prefix.length > 3 || !prefix.all { it in '0'..'9' }) return false
+        return prefix.toInt() <= if (v4) 32 else 128
+    }
+
+    private fun validIPv4(a: String): Boolean {
+        val octets = a.split('.')
+        if (octets.size != 4) return false
+        return octets.all { o ->
+            o.length in 1..3 && o.all { it in '0'..'9' } && (o.length == 1 || o[0] != '0') && o.toInt() <= 255
+        }
+    }
+
+    private fun validIPv6(a: String): Boolean {
+        if (a.isEmpty()) return false
+        fun groups(part: String): Int? {
+            if (part.isEmpty()) return 0
+            val g = part.split(':')
+            return if (g.all { x -> x.length in 1..4 && x.all { c -> c in '0'..'9' || c in 'a'..'f' || c in 'A'..'F' } }) g.size else null
+        }
+        val i = a.indexOf("::")
+        if (i < 0) return groups(a) == 8
+        val rest = a.substring(i + 2)
+        if (rest.contains("::")) return false
+        val head = groups(a.substring(0, i)) ?: return false
+        val tail = groups(rest) ?: return false
+        return head + tail <= 7
     }
 
     // ---- audit ----

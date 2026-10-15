@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"io/fs"
 	"net/http"
@@ -257,6 +258,35 @@ func TestApproved(t *testing.T) {
 			t.Error("request body is not encrypted")
 		}
 	}
+}
+
+func TestLogsKeyFingerprint(t *testing.T) {
+	e := setup(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	e.phone.decide = func(req protocol.Request) (protocol.Response, bool) {
+		return protocol.Response{ID: req.ID, TS: time.Now().Unix(), Status: "approved", Cert: e.phone.sign(req, e.phone.ca, nil)}, true
+	}
+	e.phone.run(ctx)
+	var mu sync.Mutex
+	var lines []string
+	cert, err := e.run(t, ctx, Params{Logf: func(format string, args ...any) {
+		mu.Lock()
+		defer mu.Unlock()
+		lines = append(lines, fmt.Sprintf(format, args...))
+	}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "yessh: the prompt must show key " + ssh.FingerprintSHA256(cert.Key)
+	mu.Lock()
+	defer mu.Unlock()
+	for _, l := range lines {
+		if l == want {
+			return
+		}
+	}
+	t.Errorf("log lines %q do not include %q", lines, want)
 }
 
 func TestDenied(t *testing.T) {

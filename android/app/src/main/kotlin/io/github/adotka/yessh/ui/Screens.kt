@@ -123,7 +123,8 @@ fun SetupScreen(onCreated: () -> Unit) {
         ModeOption(mode == CaKey.Mode.PER_APPROVAL, "Fingerprint / PIN for every approval (recommended)",
             "Tap yessh on the notification, then confirm. The key itself refuses to sign without it.") { mode = CaKey.Mode.PER_APPROVAL }
         ModeOption(mode == CaKey.Mode.UNLOCKED, "One tap while unlocked",
-            "Tap yessh on the notification and it's done. The key only works while the phone is unlocked.") { mode = CaKey.Mode.UNLOCKED }
+            "Tap yessh on the notification and it's done. The key only works while the phone is unlocked. " +
+                "Note: anything that can press notification buttons while the phone is unlocked (apps with notification access, a paired watch) can approve too.") { mode = CaKey.Mode.UNLOCKED }
         Text("This can't be changed later without creating a new CA.", style = MaterialTheme.typography.bodySmall)
 
         error?.let { Warn(it) }
@@ -138,7 +139,7 @@ fun SetupScreen(onCreated: () -> Unit) {
                 }
                 val url = ntfy.trim().trimEnd('/')
                 if (!url.startsWith("https://") && !url.startsWith("http://")) {
-                    error = "ntfy server must be an https:// URL"
+                    error = "ntfy server must be an https:// (or http://) URL"
                     return@Button
                 }
                 busy = true

@@ -7,10 +7,12 @@ import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Test
 import java.io.File
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class ProtocolTest {
     private val vectors = Protocol.json.parseToJsonElement(
@@ -117,5 +119,32 @@ class ProtocolTest {
     @Test
     fun responseJsonOmitsCertWhenDenied() {
         assertEquals("""{"id":"x","ts":1,"status":"denied"}""", Protocol.encodeResponse(Protocol.Response("x", 1, "denied")))
+    }
+
+    @Test
+    fun whoRejectsUnicodeControlAndFormat() {
+        for (bad in listOf("who=\"a\\u202eb\"", "who=\"a\\u200bb\"", "who=\"a\\u2028b\"", "who=\"a\\u2029b\"", "who=\"a\\u0085b\"")) {
+            assertEquals(Protocol.Reason.MALFORMED, reason(req(bad)), bad)
+            val e = Protocol.evaluate(req(bad), policy, now) { false } as Protocol.Evaluation.Rejected
+            assertEquals("who", e.detail, bad)
+        }
+        assertNull(reason(req("who=\"jöe@host\"")))
+    }
+
+    @Test
+    fun sourceAddressValidation() {
+        for (good in listOf(
+            "", "203.0.113.7", "203.0.113.0/24", "2001:db8::1", "2001:db8::/32", "10.0.0.1, 10.0.1.0/24",
+            "::", "::1", "1:2:3:4:5:6:7:8", "0.0.0.0/0", "::/0", "fe80::1/128", " 10.0.0.1 ,10.0.0.2",
+        )) {
+            assertTrue(Protocol.validSourceAddress(good), good)
+        }
+        for (bad in listOf(
+            " ", "example.com", "10.0.0.256", "10.0.0.0/33", "2001:db8::/129", "10.0.0.1,", ",10.0.0.1", "10.0.0.1,,10.0.0.2", "*",
+            "10.0.0", "10.0.0.0.1", "10.0.0.0/", "10.0.0.0/-1", "10.0.0.0/24/1", "1:2:3:4:5:6:7", "1:2:3:4:5:6:7:8:9",
+            "1::2::3", ":::", "1:::2", "12345::1", "g::1", "10.0.0.*", "10.0.0.1/ 24", "010.0.0.1",
+        )) {
+            assertFalse(Protocol.validSourceAddress(bad), bad)
+        }
     }
 }

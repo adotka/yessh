@@ -26,7 +26,9 @@ yessh pair 'yessh1:eyJ2IjoxLC...'
 ```
 
 This writes `~/.config/yessh/config.json` (mode 0600) and prints the CA line. Check it
-against the phone.
+against the fingerprint shown under **Setup → CA public key** on the phone: the pairing string is
+the only place the host learns which CA to trust. Keep `~/.config/yessh/` out of dotfile repos
+and synced folders; the file holds the PSK.
 
 ## 3. Fleet hosts: trust the CA
 
@@ -47,6 +49,15 @@ TrustedUserCAKeys /etc/ssh/yessh_ca.pub
 With `AuthorizedPrincipalsFile`, `/etc/ssh/principals/root` lists the principals allowed to log
 in as root (one per line). Without it, a cert principal must equal the target user name.
 
+Useful extras on the fleet:
+
+- `LogLevel VERBOSE` makes sshd log the certificate's key id (`yessh:<label>:<request id>`) and
+  serial on every login, which matches the entry in the phone's log.
+- `RevokedKeys /etc/ssh/yessh_revoked` lets you cut off a certificate before it expires by serial
+  (`ssh-keygen -k -f /etc/ssh/yessh_revoked -s /etc/ssh/yessh_ca.pub <file with "serial: N">`).
+- Set **source-address** in the phone policy to the management host's address when it is static;
+  a stolen key and certificate are then useless from anywhere else.
+
 Reload sshd (`systemctl reload ssh` or `sshd`). **Keep a break-glass path** (an existing
 authorized key kept offline, or your provider's console) until you have proven the flow.
 
@@ -58,6 +69,10 @@ Match host *.internal exec "yessh ensure -p root"
     CertificateFile ${XDG_RUNTIME_DIR}/yessh/id_yessh-cert.pub
     IdentitiesOnly yes
 ```
+
+When a request goes out, the CLI prints the ephemeral key fingerprint
+(`yessh: the prompt must show key SHA256:…`). The phone prompt shows the same fingerprint; if it
+differs, or a prompt arrives that you didn't trigger, tap **nope**: someone else holds the PSK.
 
 `yessh ensure` exits 0 immediately if a valid cert with at least `--min-remaining` (default
 10m) left covers the requested principals. Otherwise it sends a request and waits (default

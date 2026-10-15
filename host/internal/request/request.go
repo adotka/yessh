@@ -124,6 +124,9 @@ func Run(ctx context.Context, cfg config.Config, nt *ntfy.Client, dir keys.Dir, 
 		return nil, err
 	}
 	p.logf("yessh: request sent (%s for %v, ttl %s); approve it on your phone", p.Label, p.Principals, p.TTL)
+	// The ephemeral key is the only thing that tells this request from a look-alike published by
+	// anyone else holding the PSK, so show its fingerprint for comparison with the phone prompt.
+	p.logf("yessh: the prompt must show key %s", ssh.FingerprintSHA256(pending.Public))
 
 	for {
 		var m ntfy.Message

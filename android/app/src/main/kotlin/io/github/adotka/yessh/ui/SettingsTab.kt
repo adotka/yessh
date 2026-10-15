@@ -53,6 +53,7 @@ import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
 import io.github.adotka.yessh.appState
+import io.github.adotka.yessh.core.Protocol
 import io.github.adotka.yessh.data.Settings
 import io.github.adotka.yessh.security.CaKey
 import io.github.adotka.yessh.service.Notifier
@@ -237,7 +238,7 @@ private fun PolicyEditor() {
             Text(x)
         }
     }
-    OutlinedTextField(src, { src = it }, label = { Text("source-address (optional)") }, placeholder = { Text("203.0.113.7/32") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+    OutlinedTextField(src, { src = it }, label = { Text("source-address (optional)") }, placeholder = { Text("203.0.113.7/32, 2001:db8::/64") }, singleLine = true, modifier = Modifier.fillMaxWidth())
     msg?.let { Text(it, modifier = Modifier.padding(top = 4.dp)) }
     Button(modifier = Modifier.padding(top = 8.dp), onClick = {
         val max = maxTtl.toDoubleOrNull()?.times(3600)?.toLong()
@@ -249,6 +250,10 @@ private fun PolicyEditor() {
         val list = principals.split(Regex("[\\s,]+")).map { it.trim() }.filter { it.isNotEmpty() }.distinct()
         if (list.any { !Regex("^[A-Za-z0-9._@+-]{1,64}$").matches(it) }) {
             msg = "Principals may contain letters, digits and . _ @ + -"
+            return@Button
+        }
+        if (!Protocol.validSourceAddress(src.trim())) {
+            msg = "source-address must be a comma-separated list of IPv4/IPv6 addresses or CIDRs"
             return@Button
         }
         store.setPolicy(p.copy(allowedPrincipals = list, maxTtl = max, defaultTtl = minOf(def, max), extensions = EXTENSIONS.filter { it in ext }, sourceAddress = src.trim()))

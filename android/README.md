@@ -20,7 +20,9 @@ creating a new CA.
   on the notification, the system fingerprint sheet slides up over whatever you're doing, touch,
   done. The app is never brought to the front.
 - **One tap while unlocked.** The key works only while the phone is unlocked. Tap `yessh` and the
-  certificate is sent. On the lock screen, Android asks you to unlock first.
+  certificate is sent. On the lock screen, Android asks you to unlock first. Apps with notification
+  access (and paired wearables) can press the notification button while the phone is unlocked, so
+  pick per-approval mode unless you trust everything that can see your notifications.
 
 In both modes the notification buttons require an unlock when tapped from the lock screen, and
 tapping the notification body opens the full review screen, where you can untick principals or
@@ -126,6 +128,11 @@ under **Setup → About → Open-source licenses** (also linked from the first-r
   app process can't sign silently.
 - The PSK is encrypted with a Keystore AES key (no user auth, because the listener must decrypt
   requests in the background). Backups and device transfer are disabled for all app data.
+- The biometric sheet requires an explicit confirmation for passive biometrics (face), so a
+  glance can't approve by accident. Fingerprint and PIN are unaffected.
+- The host CLI prints the ephemeral key fingerprint; the approval prompt must show the same one.
+- The PSK wrapping key is StrongBox-backed when the device has it.
+- The in-app `yessh` button ignores touches that arrive through an overlay (tapjacking).
 - Screens use `FLAG_SECURE` (no screenshots, hidden in recents). The pairing string is copied to
   the clipboard marked as sensitive.
 - What a stolen, unlocked phone can do: per-approval mode needs the PIN or fingerprint as well.

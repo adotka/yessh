@@ -16,6 +16,8 @@ import (
 	"strings"
 	"syscall"
 	"time"
+	"unicode"
+	"unicode/utf8"
 
 	"golang.org/x/crypto/ssh"
 
@@ -113,6 +115,9 @@ func cmdPair(args []string, stdout io.Writer) error {
 		return err
 	}
 	fmt.Fprintf(stdout, "Wrote %s\nntfy: %s\nCA:   %s\nCheck that this CA line matches the one shown on your phone.\n", path, cfg.Ntfy, cfg.CA)
+	if strings.HasPrefix(strings.ToLower(cfg.Ntfy), "http://") {
+		fmt.Fprintln(stdout, "warning: ntfy URL is plain http; the relay traffic is still end-to-end encrypted, but the access token and topic names travel in the clear. Use https:// for anything but a local relay.")
+	}
 	return nil
 }
 
@@ -175,14 +180,25 @@ func defaultWho() string {
 		name = u.Username
 	}
 	h, _ := os.Hostname()
+	return sanitizeWho(name, h)
+}
+
+// maxWho is the longest `who` (in bytes) the phone accepts.
+const maxWho = 128
+
+// sanitizeWho builds the "user@host" string shown on the phone prompt. It drops control,
+// format (e.g. bidi overrides, zero-width) and line/paragraph separator characters, which could
+// be used to spoof the prompt, and truncates to maxWho bytes on a rune boundary.
+func sanitizeWho(name, host string) string {
 	who := strings.Map(func(r rune) rune {
-		if r < 0x20 || r == 0x7f {
+		if unicode.In(r, unicode.Cc, unicode.Cf, unicode.Zl, unicode.Zp) || r == utf8.RuneError {
 			return -1
 		}
 		return r
-	}, name+"@"+h)
-	if len(who) > 128 {
-		who = who[:128]
+	}, name+"@"+host)
+	for len(who) > maxWho {
+		_, size := utf8.DecodeLastRuneInString(who)
+		who = who[:len(who)-size]
 	}
 	return who
 }
